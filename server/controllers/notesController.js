@@ -6,12 +6,15 @@ const User = require("../models/User");
 // @route GET /notes
 // @access Private
 const getAllNote = asyncHandler(async (req, res) => {
+  // convert Mongo Object to json object
   const notes = await Note.find().lean();
 
+  // check note length for return message
   if (!notes.length) {
     return res.status(400).json({ message: "No notes found" });
   }
 
+  // modify value should return to client
   const notesWithUser = await Promise.all(
     notes.map(async (note) => {
       const user = await User.findById(note.user).lean().exec();
@@ -19,6 +22,7 @@ const getAllNote = asyncHandler(async (req, res) => {
     })
   );
 
+  // return value to client
   return res.json(notesWithUser);
 });
 
@@ -26,6 +30,7 @@ const getAllNote = asyncHandler(async (req, res) => {
 // @route POST /notes
 // @access Private
 const createNote = asyncHandler(async (req, res) => {
+  // extracting data required
   const { user, title, text } = req.body;
 
   // confirm  data
@@ -48,6 +53,7 @@ const createNote = asyncHandler(async (req, res) => {
 // @route PATCH /notes
 // @access Private
 const updateNote = asyncHandler(async (req, res) => {
+  // extract data you need
   const { id, user, title, text, completed } = req.body;
 
   //confirm data
@@ -73,6 +79,7 @@ const updateNote = asyncHandler(async (req, res) => {
   note.text = text;
   note.completed = completed;
 
+  // save update value to database
   const updateNote = await note.save();
 
   res.json(`${updateNote.title} updated`);
