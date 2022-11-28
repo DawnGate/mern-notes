@@ -34,11 +34,54 @@ export const notesApiSlice = apiSlice.injectEndpoints({
         } else return [{ type: "Note", id: "List" }];
       },
     }),
+    addNote: builder.mutation({
+      query: (newNote) => ({
+        url: "/posts",
+        method: "POST",
+        body: {
+          ...newNote,
+        },
+      }),
+      invalidatesTags: [{ type: "Note", id: "List" }],
+    }),
+    updateNote: builder.mutation({
+      query: (updateNote) => ({
+        url: "/posts",
+        method: "PATCH",
+        body: {
+          ...updateNote,
+        },
+      }),
+      invalidatesTags: (result, error, arg) => {
+        return [{ type: "Note", id: arg.id }];
+      },
+    }),
+    deleteNote: builder.mutation({
+      query: ({ id }) => ({
+        url: `/posts/${id}`,
+        method: "DELETE",
+        body: { id },
+      }),
+      invalidatesTags: (result, error, arg) => {
+        return [
+          { type: "Note", id: arg.id },
+          {
+            type: "Note",
+            id: "LIST",
+          },
+        ];
+      },
+    }),
   }),
 });
 
 // hook auto create from slice
-export const { useGetNoteQuery } = notesApiSlice;
+export const {
+  useGetNoteQuery,
+  useAddNoteMutation,
+  useUpdateNoteMutation,
+  useDeleteNoteMutation,
+} = notesApiSlice;
 
 // return the query result object
 export const selectNotesResult = notesApiSlice.endpoints.getNote.select();

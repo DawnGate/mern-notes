@@ -31,11 +31,55 @@ export const usersApiSlice = apiSlice.injectEndpoints({
         } else return [{ type: "User", id: "List" }];
       },
     }),
+    // use builder mutation
+    addNewUser: builder.mutation({
+      // with mutation query will return object {url, method, body}
+      query: (initialUserData) => ({
+        url: "/users",
+        method: "POST",
+        body: {
+          ...initialUserData,
+        },
+      }),
+      invalidatesTags: [{ type: "User", id: "LIST" }],
+    }),
+    updateUser: builder.mutation({
+      query: (updateUserData) => ({
+        url: "/users",
+        method: "PATCH",
+        body: {
+          ...updateUserData,
+        },
+      }),
+      invalidatesTags: (result, error, arg) => {
+        return [{ type: "User", id: arg.id }];
+      },
+    }),
+    deleteUser: builder.mutation({
+      query: ({ id }) => ({
+        url: "/users",
+        method: "DELETE",
+        body: {
+          id,
+        },
+      }),
+      invalidatesTags: (result, error, arg) => {
+        return [
+          { type: "User", id: "LIST" },
+          { type: "User", id: arg.id },
+        ];
+      },
+    }),
   }),
 });
 
 // hook auto create from slice
-export const { useGetUserQuery } = usersApiSlice;
+export const {
+  useGetUserQuery,
+  useAddNewUserMutation,
+  useUpdateUserMutation,
+  useDeleteUserMutation,
+} = usersApiSlice;
 
 // return the query result object
 export const selectUsersResult = usersApiSlice.endpoints.getUser.select();
