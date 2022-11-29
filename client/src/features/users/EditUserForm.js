@@ -1,16 +1,21 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAddNewUserMutation } from "./userApiSlice";
+import { useUpdateUserMutation, useDeleteUserMutation } from "./userApiSlice";
 import { faSave } from "@fortawesome/free-solid-svg-icons";
 import { ROLES } from "../../config/roles";
 
 const USER_REGEX = /^[A-z]{3,20}$/;
 const PWD_REGEX = /^[A-z0-9!@#$%]{4,12}$/;
 
-function NewUserForm() {
-  const [addNewUser, { isLoading, isSuccess, isError, error }] =
-    useAddNewUserMutation();
+function EditUserForm() {
+  const [updateUser, { isLoading, isSuccess, isError, error }] =
+    useUpdateUserMutation();
+
+  const [
+    deleteUser,
+    { isSuccess: isDelSuccess, isError: isDelError, error: delError },
+  ] = useDeleteUserMutation();
 
   const navigate = useNavigate();
 
@@ -55,7 +60,7 @@ function NewUserForm() {
   const onSaveUserClick = async (e) => {
     e.preventDefault();
     if (canSave) {
-      await addNewUser({ username, password, roles });
+      await updateUser({ username, password, roles });
     }
   };
 
@@ -131,4 +136,4 @@ function NewUserForm() {
   return content;
 }
 
-export default NewUserForm;
+export default EditUserForm;
