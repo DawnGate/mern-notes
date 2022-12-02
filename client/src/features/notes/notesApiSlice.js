@@ -17,6 +17,10 @@ export const notesApiSlice = apiSlice.injectEndpoints({
       validateStatus: (response, result) => {
         return response.status === 200 && !result.isError;
       },
+      // this only keep the data subscription in 5s, default is 60s,
+      // so if the data out of time, the redux will clean it, and it
+      // make something go crazy when using with it(because the subscription only 5s and
+      // disappeard :v)
       keepUnusedDataFor: 5,
       transformResponse: (responseData) => {
         const loadedNotes = responseData.map((note) => {
@@ -36,7 +40,7 @@ export const notesApiSlice = apiSlice.injectEndpoints({
     }),
     addNote: builder.mutation({
       query: (newNote) => ({
-        url: "/posts",
+        url: "/notes",
         method: "POST",
         body: {
           ...newNote,
@@ -46,7 +50,7 @@ export const notesApiSlice = apiSlice.injectEndpoints({
     }),
     updateNote: builder.mutation({
       query: (updateNote) => ({
-        url: "/posts",
+        url: "/notes",
         method: "PATCH",
         body: {
           ...updateNote,
@@ -58,7 +62,7 @@ export const notesApiSlice = apiSlice.injectEndpoints({
     }),
     deleteNote: builder.mutation({
       query: ({ id }) => ({
-        url: `/posts/${id}`,
+        url: `/notes/${id}`,
         method: "DELETE",
         body: { id },
       }),

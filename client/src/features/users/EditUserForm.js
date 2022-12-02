@@ -2,13 +2,13 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useUpdateUserMutation, useDeleteUserMutation } from "./userApiSlice";
-import { faSave } from "@fortawesome/free-solid-svg-icons";
+import { faSave, faTrashCan } from "@fortawesome/free-solid-svg-icons";
 import { ROLES } from "../../config/roles";
 
 const USER_REGEX = /^[A-z]{3,20}$/;
 const PWD_REGEX = /^[A-z0-9!@#$%]{4,12}$/;
 
-function EditUserForm() {
+function EditUserForm({ user }) {
   const [updateUser, { isLoading, isSuccess, isError, error }] =
     useUpdateUserMutation();
 
@@ -19,28 +19,29 @@ function EditUserForm() {
 
   const navigate = useNavigate();
 
-  const [username, setUsername] = useState("");
+  const [username, setUsername] = useState(user.username);
   const [validUsername, setValidUsername] = useState(false);
   const [password, setPassword] = useState("");
   const [validPassword, setValidPassword] = useState(false);
-  const [roles, setRoles] = useState(["Employee"]);
+  const [roles, setRoles] = useState([]);
+  const [active, setActive] = useState(user.active);
 
   useEffect(() => {
     setValidUsername(USER_REGEX.test(username));
   }, [username]);
 
   useEffect(() => {
-    setValidPassword(PWD_REGEX.text(password));
+    setValidPassword(PWD_REGEX.test(password));
   }, [password]);
 
   useEffect(() => {
-    if (isSuccess) {
-      setValidPassword("");
+    if (isSuccess || isDelSuccess) {
+      setUsername("");
       setPassword("");
-      setRoles(["Employee"]);
+      setRoles([]);
       navigate("/dash/users");
     }
-  }, [isSuccess, navigate]);
+  }, [isSuccess, navigate, isDelSuccess]);
 
   const onChangeUsername = (e) => {
     setUsername(e.target.value);
@@ -49,20 +50,42 @@ function EditUserForm() {
     setPassword(e.target.value);
   };
   const onChangeRoles = (e) => {
-    const options = e.target.selectionOptions;
+    const options = e.target.selectedOptions;
     const values = Array.from(options, (option) => option.value);
     setRoles(values);
   };
 
-  const canSave =
-    [roles.length, validPassword, validUsername].every(Boolean) && !isLoading;
+  const onActiveChange = () => {
+    setActive((prev) => !prev);
+  };
 
-  const onSaveUserClick = async (e) => {
-    e.preventDefault();
-    if (canSave) {
-      await updateUser({ username, password, roles });
+  const onSaveUserClick = async () => {
+    if (password) {
+      await updateUser({ id: user.id, password, username, roles, active });
+    } else {
+      await updateUser({ id: user.id, username, roles, active });
     }
   };
+
+  const onDeleteUserClick = async () => {
+    await deleteUser({ id: user.id });
+  };
+
+  let canSave;
+
+  if (password) {
+    canSave =
+      [roles.length, validPassword, validUsername].every(Boolean) && !isLoading;
+  } else {
+    canSave = [roles.length, validUsername].every(Boolean) && !isLoading;
+  }
+
+  //   const onSaveUserClick = async (e) => {
+  //     e.preventDefault();
+  //     if (canSave) {
+  //       await updateUser({ username, password, roles });
+  //     }
+  //   };
 
   const options = Object.values(ROLES).map((item) => {
     return (
@@ -72,22 +95,37 @@ function EditUserForm() {
     );
   });
 
-  const errClass = isError ? "errmsg" : "offscreen";
+  const errClass = isError || isDelError ? "errmsg" : "offscreen";
   const validUserClass = !validUsername ? "form__input--incomplete" : "";
-  const validPasswordClass = !validPassword ? "form__input--incomplete" : "";
+  const validPasswordClass =
+    password && !validPassword ? "form__input--incomplete" : "";
   const validRolesClass = !Boolean(roles.length)
     ? "form__input--incomplete"
     : "";
 
+  const errContent = (error?.data?.message || delError?.data?.message) ?? "";
+
   const content = (
     <>
-      <p className={errClass}>{error?.data?.message}</p>
-      <form className="form" onSubmit={onSaveUserClick}>
+      <p className={errClass}>{errContent}</p>
+      <form className="form" onSubmit={(e) => e.preventDefault()}>
         <div className="form__title-row">
-          <h2>New User</h2>
+          <h2>Edit User</h2>
           <div className="form__action-buttons">
-            <button className="icon-button" title="Save" disabled={!canSave}>
+            <button
+              className="icon-button"
+              title="Save"
+              disabled={!canSave}
+              onClick={onSaveUserClick}
+            >
               <FontAwesomeIcon icon={faSave} />
+            </button>
+            <button
+              className="icon-button"
+              title="Delete"
+              onClick={onDeleteUserClick}
+            >
+              <FontAwesomeIcon icon={faTrashCan} />
             </button>
           </div>
         </div>
@@ -115,21 +153,37 @@ function EditUserForm() {
           value={password}
           onChange={onChangePassword}
         ></input>
+
+        <label
+          className="form__label form__checkbox-container"
+          htmlFor="user-active"
+        >
+          ACTIVE:
+          <input
+            className="form__checkbox"
+            id="user-active"
+            name="user-active"
+            type="checkbox"
+            checked={active}
+            onChange={onActiveChange}
+          ></input>
+        </label>
+
+        <label className="form__label" htmlFor="roles">
+          ASSIGNED ROLES:
+        </label>
+        <select
+          className={`form__select ${validRolesClass}`}
+          id="roles"
+          name="roles"
+          multiple={true}
+          size={3}
+          value={roles}
+          onChange={onChangeRoles}
+        >
+          {options}
+        </select>
       </form>
-      <label className="form__label" htmlFor="roles">
-        ASSIGNED ROLES:
-      </label>
-      <select
-        className={`form__select ${validRolesClass}`}
-        id="roles"
-        name="roles"
-        multiple={true}
-        size={3}
-        value={roles}
-        onChange={onChangeRoles}
-      >
-        {options}
-      </select>
     </>
   );
 

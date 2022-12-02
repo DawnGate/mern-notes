@@ -17,7 +17,7 @@ const getAllNote = asyncHandler(async (req, res) => {
   // modify value should return to client
   const notesWithUser = await Promise.all(
     notes.map(async (note) => {
-      const user = await User.findById(note.user).lean().exec();
+      const user = await User.findById(note.username).lean().exec();
       return { ...note, username: user.username };
     })
   );
@@ -31,22 +31,34 @@ const getAllNote = asyncHandler(async (req, res) => {
 // @access Private
 const createNote = asyncHandler(async (req, res) => {
   // extracting data required
-  const { user, title, text } = req.body;
+  const { userId, title, text } = req.body;
 
   // confirm  data
-  if (!user || !title || !text) {
+  if (!userId || !title || !text) {
     return res.status(400).json({ message: "All fields is required" });
   }
 
   // check duplicate
   const duplicate = await Note.findOne({ title }).lean().exec();
+  const user = await User.findById(userId).lean().exec();
 
   if (duplicate) {
     return res.status(400).json({ message: "Duplicate note title" });
   }
 
+  if (!user) {
+    return res.status(400).json({ message: "User not found" });
+  }
+
   // create and store new note
-  const note = await Note.create({ user, title, text });
+  const note = await Note.create({ username: user._id, title, text });
+
+  if (note) {
+    // Created
+    return res.status(201).json({ message: "New note created" });
+  } else {
+    return res.status(400).json({ message: "Invalid note data received" });
+  }
 });
 
 // @desc update exist note

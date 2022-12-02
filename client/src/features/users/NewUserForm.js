@@ -25,12 +25,12 @@ function NewUserForm() {
   }, [username]);
 
   useEffect(() => {
-    setValidPassword(PWD_REGEX.text(password));
+    setValidPassword(PWD_REGEX.test(password));
   }, [password]);
 
   useEffect(() => {
     if (isSuccess) {
-      setValidPassword("");
+      setUsername("");
       setPassword("");
       setRoles(["Employee"]);
       navigate("/dash/users");
@@ -44,7 +44,7 @@ function NewUserForm() {
     setPassword(e.target.value);
   };
   const onChangeRoles = (e) => {
-    const options = e.target.selectionOptions;
+    const options = e.target.selectedOptions;
     const values = Array.from(options, (option) => option.value);
     setRoles(values);
   };
@@ -110,21 +110,21 @@ function NewUserForm() {
           value={password}
           onChange={onChangePassword}
         ></input>
+        <label className="form__label" htmlFor="roles">
+          ASSIGNED ROLES:
+        </label>
+        <select
+          className={`form__select ${validRolesClass}`}
+          id="roles"
+          name="roles"
+          multiple={true}
+          size={3}
+          value={roles}
+          onChange={onChangeRoles}
+        >
+          {options}
+        </select>
       </form>
-      <label className="form__label" htmlFor="roles">
-        ASSIGNED ROLES:
-      </label>
-      <select
-        className={`form__select ${validRolesClass}`}
-        id="roles"
-        name="roles"
-        multiple={true}
-        size={3}
-        value={roles}
-        onChange={onChangeRoles}
-      >
-        {options}
-      </select>
     </>
   );
 

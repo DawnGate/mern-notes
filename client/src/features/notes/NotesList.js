@@ -9,7 +9,12 @@ function NotesList() {
     isSuccess,
     isError,
     error,
-  } = useGetNoteQuery();
+  } = useGetNoteQuery(undefined, {
+    // only working when you setting a listener
+    refetchOnFocus: true,
+    refetchOnMountOrArgChange: true,
+    pollingInterval: 15000,
+  });
 
   let content;
 

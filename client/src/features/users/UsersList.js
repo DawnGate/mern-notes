@@ -9,7 +9,11 @@ function UsersList() {
     isSuccess,
     isError,
     error,
-  } = useGetUserQuery();
+  } = useGetUserQuery(undefined, {
+    pollingInterval: 60000,
+    refetchOnFocus: true,
+    refetchOnMountOrArgChange: true,
+  });
 
   let content;
 
