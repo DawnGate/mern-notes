@@ -18,7 +18,7 @@ const getAllNote = asyncHandler(async (req, res) => {
   const notesWithUser = await Promise.all(
     notes.map(async (note) => {
       const user = await User.findById(note.username).lean().exec();
-      return { ...note, username: user.username };
+      return { ...note, usernameText: user.username };
     })
   );
 
@@ -66,10 +66,10 @@ const createNote = asyncHandler(async (req, res) => {
 // @access Private
 const updateNote = asyncHandler(async (req, res) => {
   // extract data you need
-  const { id, user, title, text, completed } = req.body;
+  const { id, userId, title, text, completed } = req.body;
 
   //confirm data
-  if (!id || !user || !title || !text || typeof completed !== "boolean") {
+  if (!id || !userId || !title || !text || typeof completed !== "boolean") {
     return res.status(400).json({ message: "All field are required" });
   }
 
@@ -86,7 +86,7 @@ const updateNote = asyncHandler(async (req, res) => {
     return res.status(400).json({ message: "Duplicate not title" });
   }
 
-  note.user = user;
+  note.user = userId;
   note.title = title;
   note.text = text;
   note.completed = completed;
@@ -101,7 +101,7 @@ const updateNote = asyncHandler(async (req, res) => {
 // @route DELETE /notes
 // @access Private
 const deleteNote = asyncHandler(async (req, res) => {
-  const { id } = req.id;
+  const { id } = req.body;
 
   // confirm data
 
@@ -110,7 +110,7 @@ const deleteNote = asyncHandler(async (req, res) => {
   }
 
   // check existNote
-  const note = Note.findById(id).exec();
+  const note = await Note.findById(id).exec();
 
   if (!note) {
     return res.status(400).json({ message: "Note not found" });
