@@ -13,6 +13,7 @@ function PreFetch() {
     const notes = store.dispatch(notesApiSlice.endpoints.getNote.initiate());
     const users = store.dispatch(usersApiSlice.endpoints.getUser.initiate());
     return () => {
+      console.log("UnSubscribing");
       notes.unsubscribe();
       users.unsubscribe();
     };
